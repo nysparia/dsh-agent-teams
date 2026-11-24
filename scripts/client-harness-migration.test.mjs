@@ -44,3 +44,25 @@ test('turn tail keeps each team summary on its create turn and supports multiple
   assert.deepEqual(teamCardsForTurn(nodes.values(), 2), [later])
   assert.deepEqual(teamCardsForTurn(nodes.values(), 3), [])
 })
+
+test('the composer entry stands in only while the header seat is not mounted', async () => {
+  const { getHeaderEntryPresenceSnapshot, headerEntryOwnsSession, setHeaderEntryMounted, subscribeHeaderEntryPresence } =
+    await import('../lib/client/entry-presence.js')
+  const seen = []
+  const off = subscribeHeaderEntryPresence(() => seen.push([...getHeaderEntryPresenceSnapshot()]))
+  // A blank session never mounts the header seat, so the composer entry owns it.
+  assert.equal(headerEntryOwnsSession(getHeaderEntryPresenceSnapshot(), 'blank'), false)
+  setHeaderEntryMounted('blank', true)
+  assert.equal(headerEntryOwnsSession(getHeaderEntryPresenceSnapshot(), 'blank'), true)
+  // Presence is per session: another session's seat must not hide this entry.
+  assert.equal(headerEntryOwnsSession(getHeaderEntryPresenceSnapshot(), 'other'), false)
+  // Idempotent writes publish nothing, so a re-render cannot loop the store.
+  setHeaderEntryMounted('blank', true)
+  assert.deepEqual(seen, [['blank']])
+  setHeaderEntryMounted('blank', false)
+  assert.equal(headerEntryOwnsSession(getHeaderEntryPresenceSnapshot(), 'blank'), false)
+  assert.deepEqual(seen, [['blank'], []])
+  off()
+  setHeaderEntryMounted('blank', true)
+  assert.equal(seen.length, 2)
+})

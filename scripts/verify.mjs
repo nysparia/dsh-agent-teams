@@ -195,6 +195,8 @@ const activityPanelCss = await readFile(new URL('../src/client/ActivityPanel.mod
 const activityPanelSource = await readFile(new URL('../src/client/ActivityPanel.tsx', import.meta.url), 'utf8')
 const stagingPlanSource = await readFile(new URL('../src/client/StagingPlanEditor.tsx', import.meta.url), 'utf8')
 const clientIndexSource = await readFile(new URL('../src/client/index.tsx', import.meta.url), 'utf8')
+const teamChatEntrySource = await readFile(new URL('../src/client/TeamChatEntry.tsx', import.meta.url), 'utf8')
+const entryPresenceSource = await readFile(new URL('../src/client/entry-presence.ts', import.meta.url), 'utf8')
 const agentTeamsCardCss = await readFile(new URL('../src/client/AgentTeamsCard.module.css', import.meta.url), 'utf8')
 const agentTeamsCardSource = await readFile(new URL('../src/client/AgentTeamsCard.tsx', import.meta.url), 'utf8')
 const artworkSource = await readFile(new URL('../src/client/artwork.ts', import.meta.url), 'utf8')
@@ -217,7 +219,19 @@ check(
     && clientIndexSource.includes("'uiConversation', 'slots', 'sessions', 'locale', 'modelDirectories'")
     && clientIndexSource.includes('ctx.uiConversation.events.register(agentTeamsCardDefinition)')
     && clientIndexSource.includes('ctx.locale.register(AGENT_TEAMS_LOCALE_NAMESPACE, { zh, en })')
-    && clientIndexSource.match(/locale:\s*AGENT_TEAMS_LOCALE_NAMESPACE/gu)?.length === 5,
+    && clientIndexSource.match(/locale:\s*AGENT_TEAMS_LOCALE_NAMESPACE/gu)?.length === 6,
+)
+check(
+  'a blank session still reaches its team through the composer tool row',
+  // Harness 0.2.3 renders `conversation.session.header.actions` only when the
+  // session is not blank, so the header entry alone left a team unreachable.
+  clientIndexSource.includes("native.slots.inject('conversation.input.left'")
+    && clientIndexSource.includes('TeamComposerEntry')
+    && teamChatEntrySource.includes('setHeaderEntryMounted(sessionId, true)')
+    && teamChatEntrySource.includes('headerEntryOwnsSession(headerMounted, sessionId)')
+    && entryPresenceSource.includes('export function setHeaderEntryMounted')
+    && entryPresenceSource.includes('export function headerEntryOwnsSession'),
+  'the composer entry must stand in exactly when the header seat is not mounted',
 )
 check(
   'slash command transcript hides the duplicate pre-message result row',

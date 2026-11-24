@@ -20,7 +20,7 @@ import type { UsePanelInfo } from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-model-selection/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import { ActivitySurface, WorkspaceActivity, createWorkspaceBridge, TEAM_TAB_ID, TEAM_TAB_KIND } from './WorkspaceActivity.tsx'
-import { TeamChatEntry, TeamTurnCard } from './TeamChatEntry.tsx'
+import { TeamChatEntry, TeamComposerEntry, TeamTurnCard } from './TeamChatEntry.tsx'
 import { createWorkspaceState } from './workspace-state.ts'
 import { AgentTeamsCard, type AgentTeamsCardInjected } from './AgentTeamsCard.tsx'
 import { agentTeamsCardDefinition } from './agent-teams-card-definition.ts'
@@ -95,6 +95,13 @@ export function apply(ctx: ClientContext): void {
       name: 'conversation.session.header.actions', id: 'agent-teams-entry', order: 50,
       locale: AGENT_TEAMS_LOCALE_NAMESPACE,
     }, TeamChatEntry))
+    // Harness 0.2.3 renders the header action seat only for non-blank sessions,
+    // so the composer tool row carries the same entry whenever that seat is
+    // absent. Both read one mount record, so a team never shows two entries.
+    native.slots.inject('conversation.input.left', () => native.slots.register({
+      name: 'conversation.input.left', id: 'agent-teams-entry', order: 50,
+      locale: AGENT_TEAMS_LOCALE_NAMESPACE,
+    }, TeamComposerEntry))
     native.slots.inject('conversation.chat.turnTail', () => native.slots.register({
       name: 'conversation.chat.turnTail', id: 'agent-teams-summary', order: 50,
       locale: AGENT_TEAMS_LOCALE_NAMESPACE,

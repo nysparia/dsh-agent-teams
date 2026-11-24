@@ -127,6 +127,15 @@ try {
   await unavailable.arrayBuffer()
   assert.equal(calls, 2, 'missing Connection must fail closed')
 
+  // Harness 0.2.3 removed `requestRejection` from Connection and moved route
+  // admission into WebServer's own `webserver/authorize` policy. A gate without
+  // that method must not fail closed on a fence the host already applied.
+  gate = {}
+  const hostFenced = await fetch(base + paths[0], { headers: { cookie } })
+  assert.equal(hostFenced.status, 200, 'a host that removed requestRejection must not be re-fenced here')
+  assert.deepEqual(await hostFenced.json(), { ok: true })
+  assert.equal(calls, 3, 'the host-admitted request reaches the route handler')
+
   await fiber.dispose()
   assert(paths.every(path => !routes.has(path)), 'unload removes every owned route')
   gate = ctx.connection

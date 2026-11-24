@@ -8,7 +8,18 @@ export interface WebRouteHost {
         handler: (req: IncomingMessage, res: ServerResponse) => void | Promise<void>;
     }): () => void;
 }
-export type BrowserRequestGate = Pick<HostConnectionService, 'requestRejection'>;
+/**
+ * The browser-request fence this plugin applies to its own raw WebServer routes.
+ *
+ * Hosts up to 0.2.2 expose `requestRejection` on the Connection service and
+ * leave raw routes unfenced, so the plugin applies that fence itself. From
+ * 0.2.3 the WebServer admits every route through `webserver/authorize` with a
+ * default `required` policy, and Connection no longer exports
+ * `requestRejection`; the host fence is then already in force, so the plugin
+ * must not re-apply a fence it cannot reach. The method stays optional so one
+ * build serves both host generations.
+ */
+export type BrowserRequestGate = Partial<Pick<HostConnectionService, 'requestRejection'>>;
 export declare class RequestBodyError extends Error {
     readonly status: 400 | 413;
     constructor(message: string, status: 400 | 413);

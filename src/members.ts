@@ -1008,8 +1008,11 @@ export async function spawnMember(
   // mirror what startContinuable would reject, with an actionable error.
   const provider = ctx.subagents.getProvider(config.provider)
   if (provider === undefined) {
+    // `subagents.list()` was removed in Harness 0.2.1-rc.2, so the provider
+    // names cannot be enumerated here; name the configured one instead of
+    // throwing a TypeError from the diagnostic path itself.
     throw new Error(
-      `agent-teams: no subagent provider "${config.provider}" is registered (available: ${ctx.subagents.list().join(', ') || 'none'}) — `
+      `agent-teams: no subagent provider "${config.provider}" is registered — `
       + 'check that the subagent provider row (e.g. subagent-spawn) is mounted in the composition',
     )
   }
